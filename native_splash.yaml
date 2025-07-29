@@ -1,0 +1,22 @@
+flutter_native_splash:
+  android: true
+  ios: true
+  web: false
+  fullscreen: true
+  android_gravity: center
+
+
+  color: "#ffffff"
+  #background_image: "assets/img/splash_background.png"
+  image: "assets/images/logo/logo_ipv.png"
+  #branding: "assets/splash/leyenda_splash.png"
+  #icon_background_color: "#000000"
+  
+
+  android_12:
+    color: "#ffffff"
+    #background_image: "assets/img/splash_background.png"
+    image: "assets/images/logo/logo_ipv.png"
+    #branding: "assets/splash/leyenda_splash.png"
+
+    #icon_background_color: "#000000"
