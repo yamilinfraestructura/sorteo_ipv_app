@@ -1,6 +1,7 @@
 // ignore_for_file: no_leading_underscores_for_local_identifiers
 
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 
 import 'widgets/widget.dart';
 
@@ -40,8 +41,8 @@ class HomeScreen extends StatelessWidget {
               leading: const Icon(Icons.import_export),
               title: const Text('Importar Participantes'),
               onTap: () {
-                // Acción al pulsar el elemento
-                Get.toNamed('/carga-participantes')
+                Navigator.pop(context); // Cerrar drawer
+                Get.toNamed('/carga-participantes');
               },
             ),
             ListTile(

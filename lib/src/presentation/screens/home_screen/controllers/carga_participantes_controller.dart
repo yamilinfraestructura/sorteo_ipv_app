@@ -1,17 +1,26 @@
 // ignore_for_file: depend_on_referenced_packages
 
-import 'package:get/get.dart';
+import 'dart:math';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:get/get.dart';
 import 'package:excel/excel.dart';
 import 'package:file_picker/file_picker.dart';
 import 'dart:io';
 import 'package:sorteo_ipv_app/src/domain/models/participantes_model.dart';
 
 class CargaParticipantesController extends GetxController {
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   var isLoading = false.obs;
   var mensaje = ''.obs;
   var participantes = <ParticipanteModel>[].obs;
   var participantesExisten = false.obs;
+
+  // Observable para el índice seleccionado en la ruleta
+  RxInt selectedIndex = 0.obs;
+
+  // Observable para los participantes sorteados
+  RxList<ParticipanteModel> participantesSorteados = <ParticipanteModel>[].obs;
 
   // Verificar si ya existen participantes para el sorteo actual
   Future<bool> verificarParticipantesExistentes(String idSorteoActual) async {
@@ -139,5 +148,33 @@ class CargaParticipantesController extends GetxController {
     } finally {
       isLoading.value = false;
     }
+  }
+
+  // Función para iniciar el sorteo
+  void iniciarSorteo() {
+    if (participantes.isEmpty) {
+      Get.snackbar(
+        'Error',
+        'No hay participantes para sortear',
+        snackPosition: SnackPosition.BOTTOM,
+      );
+      return;
+    }
+
+    // Generar un índice aleatorio
+    final random = Random();
+    selectedIndex.value = random.nextInt(participantes.length);
+
+    // Agregar el participante sorteado a la lista de sorteados
+    final participanteSorteado = participantes[selectedIndex.value];
+    if (!participantesSorteados.contains(participanteSorteado)) {
+      participantesSorteados.add(participanteSorteado);
+    }
+  }
+
+  // Función para limpiar los resultados del sorteo
+  void limpiarSorteo() {
+    participantesSorteados.clear();
+    selectedIndex.value = 0;
   }
 }
