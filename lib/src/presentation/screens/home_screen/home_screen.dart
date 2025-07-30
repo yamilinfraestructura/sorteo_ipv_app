@@ -41,6 +41,7 @@ class HomeScreen extends StatelessWidget {
               title: const Text('Importar Participantes'),
               onTap: () {
                 // Acción al pulsar el elemento
+                Get.toNamed('/carga-participantes')
               },
             ),
             ListTile(
