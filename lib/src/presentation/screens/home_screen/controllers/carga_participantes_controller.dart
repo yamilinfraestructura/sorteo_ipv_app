@@ -5,16 +5,67 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:excel/excel.dart';
 import 'package:file_picker/file_picker.dart';
 import 'dart:io';
+import 'package:sorteo_ipv_app/src/data/models/participantes_model.dart';
 
 class CargaParticipantesController extends GetxController {
   var isLoading = false.obs;
   var mensaje = ''.obs;
-  var participantes = <Map<String, dynamic>>[].obs;
+  var participantes = <ParticipanteModel>[].obs;
+  var participantesExisten = false.obs;
+
+  // Verificar si ya existen participantes para el sorteo actual
+  Future<bool> verificarParticipantesExistentes(String idSorteoActual) async {
+    try {
+      var snapshot = await FirebaseFirestore.instance
+          .collection('participantes')
+          .where('idSorteo', isEqualTo: idSorteoActual)
+          .limit(1)
+          .get();
+      
+      participantesExisten.value = snapshot.docs.isNotEmpty;
+      return snapshot.docs.isNotEmpty;
+    } catch (e) {
+      mensaje.value = 'Error al verificar participantes: ${e.toString()}';
+      return false;
+    }
+  }
+
+  // Obtener participantes desde Firebase
+  Future<void> obtenerParticipantes(String idSorteoActual) async {
+    isLoading.value = true;
+    try {
+      var snapshot = await FirebaseFirestore.instance
+          .collection('participantes')
+          .where('idSorteo', isEqualTo: idSorteoActual)
+          .orderBy('nro_para_sorteo')
+          .get();
+
+      List<ParticipanteModel> listaParticipantes = snapshot.docs
+          .map((doc) => ParticipanteModel.fromMap(doc.data(), id: doc.id))
+          .toList();
+
+      participantes.assignAll(listaParticipantes);
+      mensaje.value = 'Se cargaron ${listaParticipantes.length} participantes';
+    } catch (e) {
+      mensaje.value = 'Error al obtener participantes: ${e.toString()}';
+    } finally {
+      isLoading.value = false;
+    }
+  }
 
   Future<void> importarExcel(String idSorteoActual) async {
     isLoading.value = true;
     mensaje.value = '';
     try {
+      // Primero verificar si ya existen participantes
+      bool yaExisten = await verificarParticipantesExistentes(idSorteoActual);
+      if (yaExisten) {
+        mensaje.value = 'Los participantes ya están cargados para este sorteo';
+        await obtenerParticipantes(idSorteoActual);
+        isLoading.value = false;
+        return;
+      }
+
       FilePickerResult? result = await FilePicker.platform.pickFiles(
         type: FileType.custom,
         allowedExtensions: ['xlsx'],
@@ -30,73 +81,55 @@ class CargaParticipantesController extends GetxController {
           isLoading.value = false;
           return;
         }
-        List<Map<String, dynamic>> nuevos = [];
-        int duplicados = 0;
-        List<String> dnisExcel = [];
-        for (int i = 1; i < sheet.maxRows; i++) {
-          final row = sheet.row(i);
-          if (row.isEmpty || row[3] == null) continue;
-          dnisExcel.add(row[3]?.value?.toString() ?? '');
-        }
-        // Verificar duplicados en Firestore
-        var snapshot = await FirebaseFirestore.instance
-            .collection('participantes')
-            .where('dni', whereIn: dnisExcel)
-            .where('idSorteo', isEqualTo: idSorteoActual)
-            .get();
-        var dnisFirestore = snapshot.docs
-            .map((doc) => doc['dni'] as String)
-            .toSet();
-
+        List<ParticipanteModel> nuevos = [];
+        
         for (int i = 1; i < sheet.maxRows; i++) {
           final row = sheet.row(i);
           if (row.isEmpty || row[3] == null || row[4] == null) continue;
-          final data = {
-            'nro_para_sorteo': row[0]?.value?.toString() ?? '',
-            'orden_sorteado': row[1]?.value?.toString() ?? '',
-            'nro_inscripcion': row[2]?.value?.toString() ?? '',
-            'dni': row[3]?.value?.toString() ?? '',
-            'apellido': row[4]?.value?.toString() ?? '',
-            'nombre': row[5]?.value?.toString() ?? '',
-            'sexo': row[6]?.value?.toString() ?? '',
-            'f_nac': row[7]?.value?.toString() ?? '',
-            'ingreso_mensual': row[8]?.value?.toString() ?? '',
-            'estudios': row[9]?.value?.toString() ?? '',
-            'f_fall': row[10]?.value?.toString() ?? '',
-            'f_baja': row[11]?.value?.toString() ?? '',
-            'departamento': row[12]?.value?.toString() ?? '',
-            'localidad': row[13]?.value?.toString() ?? '',
-            'barrio': row[14]?.value?.toString() ?? '',
-            'domicilio': row[15]?.value?.toString() ?? '',
-            'tel': row[16]?.value?.toString() ?? '',
-            'cant_ocupantes': row[17]?.value?.toString() ?? '',
-            'descripcion1': row[18]?.value?.toString() ?? '',
-            'descripcion2': row[19]?.value?.toString() ?? '',
-            'grupreferencial': row[20]?.value?.toString() ?? '',
-            'preferencial_ficha': row[21]?.value?.toString() ?? '',
-            'ficha': row[22]?.value?.toString() ?? '',
-            'f_alta': row[23]?.value?.toString() ?? '',
-            'fmodif': row[24]?.value?.toString() ?? '',
-            'f_baja2': row[25]?.value?.toString() ?? '',
-            'expediente': row[26]?.value?.toString() ?? '',
-            'reemp': row[27]?.value?.toString() ?? '',
-            'estado_txt': row[28]?.value?.toString() ?? '',
-            'circuitoipv_txt': row[29]?.value?.toString() ?? '',
-            'circuitoipv_nota': row[30]?.value?.toString() ?? '',
-            'idSorteo': idSorteoActual,
-          };
-          if (dnisFirestore.contains(data['dni'])) {
-            duplicados++;
-            continue;
-          }
+          
+          final participante = ParticipanteModel(
+            nroParaSorteo: row[0]?.value?.toString() ?? '',
+            ordenSorteado: row[1]?.value?.toString() ?? '',
+            nroInscripcion: row[2]?.value?.toString() ?? '',
+            dni: row[3]?.value?.toString() ?? '',
+            apellido: row[4]?.value?.toString() ?? '',
+            nombre: row[5]?.value?.toString() ?? '',
+            sexo: row[6]?.value?.toString() ?? '',
+            fNac: row[7]?.value?.toString() ?? '',
+            ingresoMensual: row[8]?.value?.toString() ?? '',
+            estudios: row[9]?.value?.toString() ?? '',
+            fFall: row[10]?.value?.toString() ?? '',
+            fBaja: row[11]?.value?.toString() ?? '',
+            departamento: row[12]?.value?.toString() ?? '',
+            localidad: row[13]?.value?.toString() ?? '',
+            barrio: row[14]?.value?.toString() ?? '',
+            domicilio: row[15]?.value?.toString() ?? '',
+            tel: row[16]?.value?.toString() ?? '',
+            cantOcupantes: row[17]?.value?.toString() ?? '',
+            descripcion1: row[18]?.value?.toString() ?? '',
+            descripcion2: row[19]?.value?.toString() ?? '',
+            grupReferencial: row[20]?.value?.toString() ?? '',
+            preferencialFicha: row[21]?.value?.toString() ?? '',
+            ficha: row[22]?.value?.toString() ?? '',
+            fAlta: row[23]?.value?.toString() ?? '',
+            fmodif: row[24]?.value?.toString() ?? '',
+            fBaja2: row[25]?.value?.toString() ?? '',
+            expediente: row[26]?.value?.toString() ?? '',
+            reemp: row[27]?.value?.toString() ?? '',
+            estadoTxt: row[28]?.value?.toString() ?? '',
+            circuitoipvTxt: row[29]?.value?.toString() ?? '',
+            circuitoipvNota: row[30]?.value?.toString() ?? '',
+            idSorteo: idSorteoActual,
+          );
+          
           await FirebaseFirestore.instance
               .collection('participantes')
-              .add(data);
-          nuevos.add(data);
+              .add(participante.toMap());
+          nuevos.add(participante);
         }
         participantes.assignAll(nuevos);
-        mensaje.value =
-            'Importación exitosa: ${nuevos.length} participantes.${duplicados > 0 ? ' ($duplicados duplicados omitidos)' : ''}';
+        participantesExisten.value = true;
+        mensaje.value = 'Importación exitosa: ${nuevos.length} participantes cargados';
       } else {
         mensaje.value = 'No se seleccionó archivo.';
       }
