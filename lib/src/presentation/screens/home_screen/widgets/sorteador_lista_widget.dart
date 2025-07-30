@@ -1,41 +1,234 @@
-
+import 'dart:async';
+import 'dart:math';
 import 'package:flutter/material.dart';
+// ignore: depend_on_referenced_packages
 import 'package:flutter_fortune_wheel/flutter_fortune_wheel.dart';
-import 'package:get/get.dart';
-import '../controllers/carga_participantes_controller.dart';
 
 class SorteadorListaWidget extends StatefulWidget {
-  final double widthScreen;
+  const SorteadorListaWidget({super.key, required double widthScreen})
+    : _widthScreen = widthScreen;
 
-  const SorteadorListaWidget({super.key, required this.widthScreen});
+  final double _widthScreen;
 
   @override
   State<SorteadorListaWidget> createState() => _SorteadorListaWidgetState();
 }
 
 class _SorteadorListaWidgetState extends State<SorteadorListaWidget> {
-  final CargaParticipantesController controller = Get.put(CargaParticipantesController());
-  
+  StreamController<int> selected = StreamController<int>();
+
   @override
-  void initState() {
-    super.initState();
-    // Cargar participantes al inicializar el widget
-    controller.cargarParticipantes();
+  void dispose() {
+    selected.close();
+    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      width: widget.widthScreen * 0.8,
-      padding: const EdgeInsets.all(20),
-      child: Column(
-        children: [
-          const Text(
-            'Sorteo de Participantes',
-            style: TextStyle(
-              fontSize: 24,
-              fontWeight: FontWeight.bold,
-              color: Colors.black87,
+    final items = <String>[
+      'Grogu',
+      'Mace Windu',
+      'Obi-Wan Kenobi',
+      'Han Solo',
+      'Luke Skywalker',
+      'Darth Vader',
+      'Yoda',
+      'Ahsoka Tano',
+      'Rolando Molina',
+    ];
+
+    return Center(
+      // Centramos el widget en la pantalla
+      child: SizedBox(
+        height:
+            MediaQuery.of(context).size.height *
+            0.8, // Puedes ajustar la altura
+        width: widget._widthScreen * 0.8, // Puedes ajustar el ancho
+        child: CustomVerticalLottery(
+          items: items,
+          itemHeight: 70.0, // Puedes ajustar la altura de cada elemento
+          visibleItems: 5, // Cantidad de elementos visibles
+        ),
+      ),
+    );
+
+    /*SizedBox(
+      height: MediaQuery.of(context).size.height * 0.75,
+      width: widget._widthScreen * 0.5,
+      child: GestureDetector(
+        onTap: () {
+          selected.add(Fortune.randomInt(0, items.length));
+        },
+        child: Column(
+          children: [
+            Expanded(
+              child: FortuneBar(
+                selected: selected.stream,
+                items: [for (var it in items) FortuneItem(child: Text(it))],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );*/
+  }
+}
+
+class CustomVerticalLottery extends StatefulWidget {
+  const CustomVerticalLottery({
+    super.key,
+    required this.items,
+    this.itemHeight = 60.0,
+    this.visibleItems = 5,
+  });
+
+  final List<String> items;
+  final double itemHeight;
+  final int visibleItems;
+
+  @override
+  State<CustomVerticalLottery> createState() => _CustomVerticalLotteryState();
+}
+
+class _CustomVerticalLotteryState extends State<CustomVerticalLottery> {
+  final ScrollController _scrollController = ScrollController();
+  final Random _random = Random();
+  int? _selectedIndex;
+  bool _isScrolling = false;
+
+  static const int _listMultiplicationFactor = 10000;
+  late double _initialScrollOffset;
+
+  @override
+  void initState() {
+    super.initState();
+    _setRandomInitialOffset();
+  }
+
+  void _setRandomInitialOffset() {
+    final int randomStartingItem = _random.nextInt(
+      widget.items.length * _listMultiplicationFactor ~/ 2,
+    );
+    _initialScrollOffset = randomStartingItem * widget.itemHeight;
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  void _startLottery() async {
+    if (_isScrolling) return;
+
+    setState(() {
+      _selectedIndex = null;
+      _isScrolling = true;
+    });
+
+    _setRandomInitialOffset();
+    _scrollController.jumpTo(_initialScrollOffset);
+
+    // Calculamos un índice aleatorio alto para dar varias vueltas
+    const int minRotations = 25;
+    final int baseIndex = (_initialScrollOffset / widget.itemHeight).floor();
+    final int randomOffsetIndex =
+        baseIndex +
+        (minRotations * widget.items.length) +
+        _random.nextInt(widget.items.length);
+
+    final double roughTargetOffset = (randomOffsetIndex * widget.itemHeight);
+
+    await _scrollController.animateTo(
+      roughTargetOffset,
+      duration: const Duration(seconds: 4),
+      curve: Curves.easeOutExpo,
+    );
+
+    // Esperamos un poco para que la animación se asiente
+    await Future.delayed(const Duration(milliseconds: 300));
+
+    // Obtenemos el índice del ítem que quedó centrado
+    final double currentOffset = _scrollController.offset;
+    final double centerOfViewport =
+        currentOffset + (widget.itemHeight * widget.visibleItems / 2);
+
+    final double indexWithOffset =
+        (centerOfViewport - (widget.itemHeight / 2)) / widget.itemHeight;
+
+    final int closestIndex = indexWithOffset.round();
+    final int winningIndex = closestIndex % widget.items.length;
+
+    final double finalOffset =
+        (closestIndex * widget.itemHeight) -
+        ((widget.itemHeight * widget.visibleItems / 2) -
+            (widget.itemHeight / 2));
+
+    // Corrección final suave al centro perfecto
+    await _scrollController.animateTo(
+      finalOffset,
+      duration: const Duration(milliseconds: 800),
+      curve: Curves.easeOutCubic,
+    );
+
+    await Future.delayed(const Duration(milliseconds: 100));
+
+    setState(() {
+      _selectedIndex = winningIndex;
+      _isScrolling = false;
+    });
+  }
+
+  void _stopLotteryOnPanEnd() async {
+    if (_isScrolling) return;
+
+    setState(() {
+      _isScrolling = true;
+      _selectedIndex = null;
+    });
+
+    final double currentOffset = _scrollController.offset;
+    final double visibleHeight = widget.itemHeight * widget.visibleItems;
+    final double centerOfViewport = currentOffset + (visibleHeight / 2);
+
+    // Preciso: posición del ítem cuya parte superior quedaría centrada
+    final double indexWithOffset =
+        (centerOfViewport - (widget.itemHeight / 2)) / widget.itemHeight;
+    final int closestIndex = indexWithOffset.round();
+    final int winningIndex = closestIndex % widget.items.length;
+
+    final double targetOffset =
+        (closestIndex * widget.itemHeight) -
+        ((visibleHeight / 2) - (widget.itemHeight / 2));
+
+    await _scrollController.animateTo(
+      targetOffset,
+      duration: const Duration(milliseconds: 1200),
+      curve: Curves.decelerate,
+    );
+
+    await Future.delayed(const Duration(milliseconds: 50));
+
+    setState(() {
+      _selectedIndex = winningIndex;
+      _isScrolling = false;
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        ElevatedButton(
+          onPressed: _startLottery,
+          style: ElevatedButton.styleFrom(
+            backgroundColor: Colors.blueAccent,
+            foregroundColor: Colors.white,
+            padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 15),
+            textStyle: const TextStyle(fontSize: 18),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10),
             ),
           ),
           const SizedBox(height: 20),
@@ -98,64 +291,28 @@ class _SorteadorListaWidgetState extends State<SorteadorListaWidget> {
             
             return SizedBox(
               height: 300,
-              width: 400,
-              child: FortuneBar(
+              child: FortuneWheel(
                 selected: controller.selectedIndex.value,
                 items: controller.participantes.map((participante) {
                   return FortuneItem(
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(vertical: 16.0, horizontal: 12.0),
-                      child: Row(
-                        children: [
-                          CircleAvatar(
-                            backgroundColor: _getRandomColor(controller.participantes.indexOf(participante)),
-                            radius: 20,
-                            child: Text(
-                              participante.nombre.isNotEmpty ? participante.nombre[0].toUpperCase() : '?',
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontWeight: FontWeight.bold,
-                                fontSize: 16,
-                              ),
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Text(
-                                  participante.nombre,
-                                  style: const TextStyle(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.bold,
-                                    color: Colors.black87,
-                                  ),
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                                Text(
-                                  'DNI: ${participante.dni}',
-                                  style: const TextStyle(
-                                    fontSize: 12,
-                                    color: Colors.black54,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
+                    child: Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: Text(
+                        participante.nombre,
+                        style: const TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
                       ),
                     ),
                     style: FortuneItemStyle(
-                      color: Colors.white,
-                      borderColor: Colors.grey[300]!,
-                      borderWidth: 1,
+                      color: _getRandomColor(controller.participantes.indexOf(participante)),
+                      borderColor: Colors.white,
+                      borderWidth: 2,
                     ),
                   );
                 }).toList(),
-                height: 80, // Altura de cada elemento
-                visibleItemCount: 3, // Cuántos elementos son visibles al mismo tiempo
                 onAnimationEnd: () {
                   if (controller.participantes.isNotEmpty) {
                     final ganador = controller.participantes[controller.selectedIndex.value];

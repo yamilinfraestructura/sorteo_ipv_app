@@ -1,7 +1,6 @@
 // ignore_for_file: no_leading_underscores_for_local_identifiers
 
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
 
 import 'widgets/widget.dart';
 
@@ -36,14 +35,6 @@ class HomeScreen extends StatelessWidget {
                 'Sorteador IPV',
                 style: TextStyle(color: Colors.white, fontSize: 24),
               ),
-            ),
-            ListTile(
-              leading: const Icon(Icons.import_export),
-              title: const Text('Importar Participantes'),
-              onTap: () {
-                Navigator.pop(context); // Cerrar drawer
-                Get.toNamed('/carga-participantes');
-              },
             ),
             ListTile(
               leading: const Icon(Icons.settings),
