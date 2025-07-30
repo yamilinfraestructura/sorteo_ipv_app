@@ -98,28 +98,64 @@ class _SorteadorListaWidgetState extends State<SorteadorListaWidget> {
             
             return SizedBox(
               height: 300,
-              child: FortuneWheel(
+              width: 400,
+              child: FortuneBar(
                 selected: controller.selectedIndex.value,
                 items: controller.participantes.map((participante) {
                   return FortuneItem(
-                    child: Padding(
-                      padding: const EdgeInsets.all(8.0),
-                      child: Text(
-                        participante.nombre,
-                        style: const TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                        ),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(vertical: 16.0, horizontal: 12.0),
+                      child: Row(
+                        children: [
+                          CircleAvatar(
+                            backgroundColor: _getRandomColor(controller.participantes.indexOf(participante)),
+                            radius: 20,
+                            child: Text(
+                              participante.nombre.isNotEmpty ? participante.nombre[0].toUpperCase() : '?',
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 16,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Text(
+                                  participante.nombre,
+                                  style: const TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.black87,
+                                  ),
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                                Text(
+                                  'DNI: ${participante.dni}',
+                                  style: const TextStyle(
+                                    fontSize: 12,
+                                    color: Colors.black54,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                     style: FortuneItemStyle(
-                      color: _getRandomColor(controller.participantes.indexOf(participante)),
-                      borderColor: Colors.white,
-                      borderWidth: 2,
+                      color: Colors.white,
+                      borderColor: Colors.grey[300]!,
+                      borderWidth: 1,
                     ),
                   );
                 }).toList(),
+                height: 80, // Altura de cada elemento
+                visibleItemCount: 3, // Cuántos elementos son visibles al mismo tiempo
                 onAnimationEnd: () {
                   if (controller.participantes.isNotEmpty) {
                     final ganador = controller.participantes[controller.selectedIndex.value];
