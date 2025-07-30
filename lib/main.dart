@@ -4,7 +4,7 @@ import 'package:get/get.dart';
 
 //Importación de Archivos
 import 'package:sorteo_ipv_app/src/config/routers/app_routes.dart';
-//import 'package:sorteo_ipv_app/src/config/bindings/app_binding.dart';
+import 'package:sorteo_ipv_app/src/config/bindings/app_binding.dart';
 
 void main() => runApp(const MyApp());
 
@@ -17,7 +17,7 @@ class MyApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       title: 'Sorteador App IPV',
       initialRoute: '/',
-      //initialBinding: AppBinding(),
+      initialBinding: AppBinding(),
       getPages: AppRoutes.routes,
     );
   }
