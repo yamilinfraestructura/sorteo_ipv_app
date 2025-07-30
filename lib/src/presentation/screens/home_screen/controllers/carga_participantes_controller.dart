@@ -5,7 +5,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:excel/excel.dart';
 import 'package:file_picker/file_picker.dart';
 import 'dart:io';
-import 'package:sorteo_ipv_app/src/data/models/participantes_model.dart';
+import 'package:sorteo_ipv_app/src/domain/models/participantes_model.dart';
 
 class CargaParticipantesController extends GetxController {
   var isLoading = false.obs;
@@ -21,7 +21,7 @@ class CargaParticipantesController extends GetxController {
           .where('idSorteo', isEqualTo: idSorteoActual)
           .limit(1)
           .get();
-      
+
       participantesExisten.value = snapshot.docs.isNotEmpty;
       return snapshot.docs.isNotEmpty;
     } catch (e) {
@@ -82,11 +82,11 @@ class CargaParticipantesController extends GetxController {
           return;
         }
         List<ParticipanteModel> nuevos = [];
-        
+
         for (int i = 1; i < sheet.maxRows; i++) {
           final row = sheet.row(i);
           if (row.isEmpty || row[3] == null || row[4] == null) continue;
-          
+
           final participante = ParticipanteModel(
             nroParaSorteo: row[0]?.value?.toString() ?? '',
             ordenSorteado: row[1]?.value?.toString() ?? '',
@@ -121,7 +121,7 @@ class CargaParticipantesController extends GetxController {
             circuitoipvNota: row[30]?.value?.toString() ?? '',
             idSorteo: idSorteoActual,
           );
-          
+
           await FirebaseFirestore.instance
               .collection('participantes')
               .add(participante.toMap());
@@ -129,7 +129,8 @@ class CargaParticipantesController extends GetxController {
         }
         participantes.assignAll(nuevos);
         participantesExisten.value = true;
-        mensaje.value = 'Importación exitosa: ${nuevos.length} participantes cargados';
+        mensaje.value =
+            'Importación exitosa: ${nuevos.length} participantes cargados';
       } else {
         mensaje.value = 'No se seleccionó archivo.';
       }

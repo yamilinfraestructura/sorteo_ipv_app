@@ -25,6 +25,41 @@ class HomeScreen extends StatelessWidget {
           children: [SorteadorListaWidget(widthScreen: _widthScreen)],
         ),
       ),
+      endDrawer: Drawer(
+        child: ListView(
+          padding: EdgeInsets.zero,
+          children: [
+            DrawerHeader(
+              decoration: BoxDecoration(color: Colors.blue),
+              child: const Text(
+                'Sorteador IPV',
+                style: TextStyle(color: Colors.white, fontSize: 24),
+              ),
+            ),
+            ListTile(
+              leading: const Icon(Icons.import_export),
+              title: const Text('Importar Participantes'),
+              onTap: () {
+                // Acción al pulsar el elemento
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.settings),
+              title: const Text('Configuración'),
+              onTap: () {
+                // Acción al pulsar el elemento
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.info),
+              title: const Text('Acerca de'),
+              onTap: () {
+                // Acción al pulsar el elemento
+              },
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
