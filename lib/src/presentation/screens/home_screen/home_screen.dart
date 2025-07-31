@@ -1,8 +1,10 @@
 // ignore_for_file: no_leading_underscores_for_local_identifiers
 
 import 'package:flutter/material.dart';
-
+//Importación de Archivos
+import 'components/component.dart';
 import 'widgets/widget.dart';
+import 'package:sorteo_ipv_app/src/presentation/screens/home_screen/widgets/tripleslot_machine_widget.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -22,37 +24,10 @@ class HomeScreen extends StatelessWidget {
         color: Colors.orange[100],
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
-          children: [SorteadorListaWidget(widthScreen: _widthScreen)],
+          children: [TripleSlotMachineWidget()],
         ),
       ),
-      endDrawer: Drawer(
-        child: ListView(
-          padding: EdgeInsets.zero,
-          children: [
-            DrawerHeader(
-              decoration: BoxDecoration(color: Colors.blue),
-              child: const Text(
-                'Sorteador IPV',
-                style: TextStyle(color: Colors.white, fontSize: 24),
-              ),
-            ),
-            ListTile(
-              leading: const Icon(Icons.settings),
-              title: const Text('Configuración'),
-              onTap: () {
-                // Acción al pulsar el elemento
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.info),
-              title: const Text('Acerca de'),
-              onTap: () {
-                // Acción al pulsar el elemento
-              },
-            ),
-          ],
-        ),
-      ),
+      endDrawer: DrawerComponent(),
     );
   }
 }
