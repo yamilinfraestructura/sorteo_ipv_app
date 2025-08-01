@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:sorteo_ipv_app/src/presentation/screens/importar_participantes_screen/widgets/importar_participantes_widget.dart';
 
 class ImportarParticipantesScreen extends StatelessWidget {
   const ImportarParticipantesScreen({super.key});
@@ -10,7 +11,7 @@ class ImportarParticipantesScreen extends StatelessWidget {
         title: const Text('Importar Participantes'),
         backgroundColor: Colors.pink,
       ),
-      body: const Center(child: Text('Aquí se importarán los participantes.')),
+      body: Center(child: ImportarParticipantesWidget()),
     );
   }
 }

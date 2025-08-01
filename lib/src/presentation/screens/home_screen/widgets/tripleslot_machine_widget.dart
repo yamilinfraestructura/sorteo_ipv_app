@@ -1,4 +1,4 @@
-// ignore_for_file: depend_on_referenced_packages
+// ignore_for_file: depend_on_referenced_packages, unused_local_variable
 
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -59,17 +59,17 @@ class _TripleSlotMachineWidgetState extends State<TripleSlotMachineWidget> {
     super.dispose();
   }
 
-  Widget _buildSlot(SorteadorController controller) {
+  Widget _buildSlot(SorteadorController controller, {double width = 180}) {
     return Obx(() {
       final selected = controller.selectedIndex.value;
       final isScrolling = controller.isScrolling.value;
       return Container(
-        width: 120,
+        width: width,
         height: controller.itemHeight * controller.visibleItems,
-        margin: const EdgeInsets.symmetric(horizontal: 8),
+        margin: const EdgeInsets.symmetric(horizontal: 10),
         decoration: BoxDecoration(
           border: Border.all(color: Colors.grey, width: 2),
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(14),
         ),
         child: Stack(
           children: [
@@ -94,19 +94,18 @@ class _TripleSlotMachineWidgetState extends State<TripleSlotMachineWidget> {
                 physics: const BouncingScrollPhysics(),
                 itemBuilder: (context, index) {
                   final actualIndex = index % controller.items.length;
-                  final selected = controller.selectedIndex.value;
                   final isSelected =
                       selected != null && selected == actualIndex;
 
                   return Container(
                     alignment: Alignment.center,
                     margin: const EdgeInsets.symmetric(
-                      vertical: 4,
+                      vertical: 6,
                       horizontal: 8,
                     ),
                     decoration: BoxDecoration(
                       color: isSelected ? Colors.amber.shade200 : Colors.white,
-                      borderRadius: BorderRadius.circular(8),
+                      borderRadius: BorderRadius.circular(10),
                       border: Border.all(
                         color: isSelected ? Colors.amber : Colors.transparent,
                         width: isSelected ? 3 : 0,
@@ -115,16 +114,17 @@ class _TripleSlotMachineWidgetState extends State<TripleSlotMachineWidget> {
                     child: Text(
                       controller.items[actualIndex],
                       style: TextStyle(
-                        fontSize: isSelected ? 22 : 16,
+                        fontSize: isSelected ? 24 : 18,
                         fontWeight: isSelected
                             ? FontWeight.bold
-                            : FontWeight.normal,
+                            : FontWeight.w500,
                       ),
                     ),
                   );
                 },
               ),
             ),
+            // Indicador central (línea roja)
             Center(
               child: Container(
                 height: controller.itemHeight,
@@ -146,59 +146,70 @@ class _TripleSlotMachineWidgetState extends State<TripleSlotMachineWidget> {
 
   @override
   Widget build(BuildContext context) {
-    return SingleChildScrollView(
-      // Evita overflow vertical
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          ElevatedButton(
-            onPressed: iniciarSorteo,
-            child: const Text('Sortear Triple'),
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        // Scroll horizontal para los 3 slots con más ancho
+        SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              _buildSlot(ctrlParticipante, width: 180),
+              _buildSlot(ctrlManzana, width: 180),
+              _buildSlot(ctrlLote, width: 180),
+            ],
           ),
-          const SizedBox(height: 20),
+        ),
 
-          // Scroll horizontal para evitar overflow si no cabe el Row
-          SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            child: SizedBox(
-              width: MediaQuery.of(context).size.width * 0.9,
-              child: SingleChildScrollView(
-                scrollDirection: Axis.horizontal,
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    _buildSlot(ctrlParticipante),
-                    _buildSlot(ctrlManzana),
-                    _buildSlot(ctrlLote),
-                  ],
-                ),
-              ),
+        const SizedBox(height: 40),
+
+        // Botón START ovalado
+        ElevatedButton(
+          onPressed: iniciarSorteo,
+          style: ElevatedButton.styleFrom(
+            backgroundColor: Colors.redAccent.shade700,
+            foregroundColor: Colors.white,
+            padding: const EdgeInsets.symmetric(horizontal: 50, vertical: 18),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(30),
+            ),
+            elevation: 8,
+            shadowColor: Colors.black45,
+            textStyle: const TextStyle(
+              fontSize: 22,
+              fontWeight: FontWeight.bold,
             ),
           ),
+          child: const Text("START"),
+        ),
 
-          const SizedBox(height: 20),
+        const SizedBox(height: 30),
 
-          Obx(() {
-            final participante = ctrlParticipante.selectedIndex.value;
-            final manzana = ctrlManzana.selectedIndex.value;
-            final lote = ctrlLote.selectedIndex.value;
+        // Texto de resultado
+        Obx(() {
+          final participante = ctrlParticipante.selectedIndex.value;
+          final manzana = ctrlManzana.selectedIndex.value;
+          final lote = ctrlLote.selectedIndex.value;
 
-            if (participante != null && manzana != null && lote != null) {
-              return Text(
-                'Ganador: ${ctrlParticipante.items[participante]}, '
-                '${ctrlManzana.items[manzana]}, '
-                '${ctrlLote.items[lote]}',
-                style: const TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                ),
-              );
-            } else {
-              return const SizedBox.shrink();
-            }
-          }),
-        ],
-      ),
+          if (participante != null && manzana != null && lote != null) {
+            return Text(
+              'Ganador:\n${ctrlParticipante.items[participante]}, '
+              '${ctrlManzana.items[manzana]}, '
+              '${ctrlLote.items[lote]}',
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                fontSize: 22,
+                fontWeight: FontWeight.bold,
+                color: Colors.black87,
+              ),
+            );
+          } else {
+            return const SizedBox.shrink();
+          }
+        }),
+      ],
     );
   }
 }
