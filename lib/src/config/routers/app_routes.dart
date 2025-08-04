@@ -16,5 +16,6 @@ class AppRoutes {
       name: '/importar-participantes',
       page: () => const ImportarParticipantesScreen(),
     ),
+    GetPage(name: '/cargar-manzanas', page: () => const CargarManzanasScreen()),
   ];
 }

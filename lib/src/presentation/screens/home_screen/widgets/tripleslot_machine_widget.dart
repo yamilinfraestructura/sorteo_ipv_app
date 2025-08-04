@@ -1,8 +1,7 @@
 // ignore_for_file: depend_on_referenced_packages, unused_local_variable
-
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-
+import 'package:sorteo_ipv_app/src/presentation/screens/home_screen/controllers/triple_sorteador_controller.dart';
 import '../controllers/controller.dart';
 
 class TripleSlotMachineWidget extends StatefulWidget {
@@ -14,55 +13,122 @@ class TripleSlotMachineWidget extends StatefulWidget {
 }
 
 class _TripleSlotMachineWidgetState extends State<TripleSlotMachineWidget> {
-  final participantes = List.generate(10, (i) => 'Participante ${i + 1}');
-  final manzanas = List.generate(
-    5,
-    (i) => 'Manzana ${String.fromCharCode(65 + i)}',
+  final TripleSorteadorController tripleCtrl = Get.put(
+    TripleSorteadorController(),
   );
-  final lotes = List.generate(8, (i) => 'Lote ${i + 1}');
 
-  late final SorteadorController ctrlParticipante;
-  late final SorteadorController ctrlManzana;
-  late final SorteadorController ctrlLote;
+  SorteadorController? ctrlParticipante;
+  SorteadorController? ctrlManzanaYPosicion;
 
   @override
   void initState() {
     super.initState();
+
+    ever(tripleCtrl.cargando, (loading) {
+      if (loading == false) {
+        inicializarControladores();
+      }
+    });
+  }
+
+  void inicializarControladores() {
+    if (tripleCtrl.manzanaYPosicionesDisponibles.isEmpty) {
+      print('No hay lotes cargados para el sorteo.');
+      return;
+    }
+
     ctrlParticipante = Get.put(
-      SorteadorController(items: participantes),
+      SorteadorController(items: tripleCtrl.participantes),
       tag: 'participante',
     );
-    ctrlManzana = Get.put(SorteadorController(items: manzanas), tag: 'manzana');
-    ctrlLote = Get.put(SorteadorController(items: lotes), tag: 'lote');
 
-    // Esperar a que el widget se construya para hacer jumpToInitialOffset
+    ctrlManzanaYPosicion = Get.put(
+      SorteadorController(items: tripleCtrl.manzanaYPosicionesDisponibles),
+      tag: 'manzanaYPosicion',
+    );
+
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      ctrlParticipante.jumpToInitialOffset();
-      ctrlManzana.jumpToInitialOffset();
-      ctrlLote.jumpToInitialOffset();
+      ctrlParticipante?.jumpToInitialOffset();
+      ctrlManzanaYPosicion?.jumpToInitialOffset();
     });
   }
 
   Future<void> iniciarSorteo() async {
-    await ctrlParticipante.startAutomaticDraw();
-    await Future.delayed(const Duration(milliseconds: 500));
-    await ctrlManzana.startAutomaticDraw();
-    await Future.delayed(const Duration(milliseconds: 500));
-    await ctrlLote.startAutomaticDraw();
+    if (ctrlParticipante == null || ctrlManzanaYPosicion == null) {
+      print('Controladores no inicializados.');
+      return;
+    }
+
+    await ctrlParticipante!.startAutomaticDraw();
+    await Future.delayed(const Duration(milliseconds: 600));
+    await ctrlManzanaYPosicion!.startAutomaticDraw();
+
+    final index = ctrlManzanaYPosicion!.selectedIndex.value;
+    if (index == null) {
+      print('No se ha seleccionado manzana y posición aún.');
+      return;
+    }
+
+    final seleccion = ctrlManzanaYPosicion!.items[index];
+    final partes = seleccion.split(' - ');
+    if (partes.length != 2) {
+      print('Formato inválido de selección: $seleccion');
+      return;
+    }
+
+    final manzana = partes[0].trim();
+    final posicion = partes[1].trim();
+
+    final participanteIndex = ctrlParticipante!.selectedIndex.value;
+    if (participanteIndex == null) {
+      print('No se ha seleccionado participante aún.');
+      return;
+    }
+
+    final nombreParticipante = ctrlParticipante!.items[participanteIndex];
+
+    final lote = tripleCtrl.lotesPorManzana[manzana]?.firstWhere(
+      (l) => l.posicion == posicion,
+      orElse: () => null!,
+    );
+
+    if (lote == null) {
+      print('No se encontró el lote seleccionado: $manzana - $posicion');
+      return;
+    }
+
+    await tripleCtrl.registrarGanador(
+      nombreParticipante: nombreParticipante,
+      manzanaSeleccionada: manzana,
+      loteSeleccionado: lote,
+    );
   }
 
   @override
   void dispose() {
     Get.delete<SorteadorController>(tag: 'participante');
-    Get.delete<SorteadorController>(tag: 'manzana');
-    Get.delete<SorteadorController>(tag: 'lote');
+    Get.delete<SorteadorController>(tag: 'manzanaYPosicion');
     super.dispose();
   }
 
-  Widget _buildSlot(SorteadorController controller, {double width = 180}) {
+  Widget _buildSlot(SorteadorController? controller, {double width = 180}) {
+    if (controller == null) {
+      return Container(
+        width: width,
+        height: 60 * 5,
+        alignment: Alignment.center,
+        margin: const EdgeInsets.symmetric(horizontal: 10),
+        decoration: BoxDecoration(
+          border: Border.all(color: Colors.grey, width: 2),
+          borderRadius: BorderRadius.circular(14),
+          color: Colors.grey.shade200,
+        ),
+        child: const Text('Cargando...', style: TextStyle(color: Colors.grey)),
+      );
+    }
+
     return Obx(() {
       final selected = controller.selectedIndex.value;
-      final isScrolling = controller.isScrolling.value;
       return Container(
         width: width,
         height: controller.itemHeight * controller.visibleItems,
@@ -124,7 +190,6 @@ class _TripleSlotMachineWidgetState extends State<TripleSlotMachineWidget> {
                 },
               ),
             ),
-            // Indicador central (línea roja)
             Center(
               child: Container(
                 height: controller.itemHeight,
@@ -146,70 +211,80 @@ class _TripleSlotMachineWidgetState extends State<TripleSlotMachineWidget> {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
-      crossAxisAlignment: CrossAxisAlignment.center,
-      children: [
-        // Scroll horizontal para los 3 slots con más ancho
-        SingleChildScrollView(
-          scrollDirection: Axis.horizontal,
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              _buildSlot(ctrlParticipante, width: 180),
-              _buildSlot(ctrlManzana, width: 180),
-              _buildSlot(ctrlLote, width: 180),
-            ],
-          ),
-        ),
+    return Obx(() {
+      if (tripleCtrl.cargando.value) {
+        return const Center(child: CircularProgressIndicator());
+      }
 
-        const SizedBox(height: 40),
-
-        // Botón START ovalado
-        ElevatedButton(
-          onPressed: iniciarSorteo,
-          style: ElevatedButton.styleFrom(
-            backgroundColor: Colors.redAccent.shade700,
-            foregroundColor: Colors.white,
-            padding: const EdgeInsets.symmetric(horizontal: 50, vertical: 18),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(30),
-            ),
-            elevation: 8,
-            shadowColor: Colors.black45,
-            textStyle: const TextStyle(
-              fontSize: 22,
+      if (tripleCtrl.manzanaYPosicionesDisponibles.isEmpty) {
+        return const Center(
+          child: Text(
+            'No hay lotes disponibles para el sorteo.',
+            style: TextStyle(
+              fontSize: 20,
               fontWeight: FontWeight.bold,
+              color: Colors.redAccent,
+            ),
+            textAlign: TextAlign.center,
+          ),
+        );
+      }
+
+      return Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                _buildSlot(ctrlParticipante, width: 180),
+                _buildSlot(ctrlManzanaYPosicion, width: 220),
+              ],
             ),
           ),
-          child: const Text("START"),
-        ),
-
-        const SizedBox(height: 30),
-
-        // Texto de resultado
-        Obx(() {
-          final participante = ctrlParticipante.selectedIndex.value;
-          final manzana = ctrlManzana.selectedIndex.value;
-          final lote = ctrlLote.selectedIndex.value;
-
-          if (participante != null && manzana != null && lote != null) {
-            return Text(
-              'Ganador:\n${ctrlParticipante.items[participante]}, '
-              '${ctrlManzana.items[manzana]}, '
-              '${ctrlLote.items[lote]}',
-              textAlign: TextAlign.center,
-              style: const TextStyle(
+          const SizedBox(height: 40),
+          ElevatedButton(
+            onPressed: iniciarSorteo,
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.redAccent.shade700,
+              foregroundColor: Colors.white,
+              padding: const EdgeInsets.symmetric(horizontal: 50, vertical: 18),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(30),
+              ),
+              elevation: 8,
+              shadowColor: Colors.black45,
+              textStyle: const TextStyle(
                 fontSize: 22,
                 fontWeight: FontWeight.bold,
-                color: Colors.black87,
               ),
-            );
-          } else {
-            return const SizedBox.shrink();
-          }
-        }),
-      ],
-    );
+            ),
+            child: const Text("START"),
+          ),
+          const SizedBox(height: 30),
+          Obx(() {
+            final participante = ctrlParticipante?.selectedIndex.value;
+            final seleccion = ctrlManzanaYPosicion?.selectedIndex.value;
+
+            if (participante != null && seleccion != null) {
+              return Text(
+                'Ganador:\n${ctrlParticipante!.items[participante]}, '
+                '${ctrlManzanaYPosicion!.items[seleccion]}',
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                  fontSize: 22,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black87,
+                ),
+              );
+            } else {
+              return const SizedBox.shrink();
+            }
+          }),
+        ],
+      );
+    });
   }
 }

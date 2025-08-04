@@ -1,9 +1,8 @@
 // ignore_for_file: no_leading_underscores_for_local_identifiers
 
 import 'package:flutter/material.dart';
+import 'package:sorteo_ipv_app/src/presentation/screens/home_screen/widgets/widget.dart';
 import 'components/component.dart';
-import 'widgets/widget.dart';
-import 'package:sorteo_ipv_app/src/presentation/screens/home_screen/widgets/tripleslot_machine_widget.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -29,7 +28,7 @@ class HomeScreen extends StatelessWidget {
             end: Alignment.bottomRight,
           ),
         ),
-        child: const Center(child: TripleSlotMachineWidget()),
+        child: Center(child: TripleSlotMachineWidget()),
       ),
       endDrawer: DrawerComponent(),
     );

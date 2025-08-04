@@ -31,6 +31,7 @@ class DrawerComponent extends StatelessWidget {
             title: const Text('Cargar Participantes'),
             onTap: () {
               // Acción al pulsar el elemento
+              Get.toNamed('/cargar-manzanas');
             },
           ),
           ListTile(
