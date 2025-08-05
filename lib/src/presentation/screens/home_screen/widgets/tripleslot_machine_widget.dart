@@ -38,7 +38,9 @@ class _TripleSlotMachineWidgetState extends State<TripleSlotMachineWidget> {
     }
 
     ctrlParticipante = Get.put(
-      SorteadorController(items: tripleCtrl.participantes),
+      SorteadorController(
+        items: tripleCtrl.participantes.map((p) => p.nombreCompleto).toList(),
+      ),
       tag: 'participante',
     );
 
@@ -85,7 +87,8 @@ class _TripleSlotMachineWidgetState extends State<TripleSlotMachineWidget> {
       return;
     }
 
-    final nombreParticipante = ctrlParticipante!.items[participanteIndex];
+    final participanteSeleccionado =
+        tripleCtrl.participantes[participanteIndex];
 
     final lote = tripleCtrl.lotesPorManzana[manzana]?.firstWhere(
       (l) => l.posicion == posicion,
@@ -98,7 +101,7 @@ class _TripleSlotMachineWidgetState extends State<TripleSlotMachineWidget> {
     }
 
     await tripleCtrl.registrarGanador(
-      nombreParticipante: nombreParticipante,
+      participanteSeleccionado: participanteSeleccionado,
       manzanaSeleccionada: manzana,
       loteSeleccionado: lote,
     );

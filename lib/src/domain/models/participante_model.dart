@@ -37,6 +37,7 @@ class ParticipanteModel {
   final DateTime? timestampInscripcion;
   final String reemp;
   final String cantOcupantes;
+  final String id;
 
   ParticipanteModel({
     required this.dni,
@@ -74,9 +75,13 @@ class ParticipanteModel {
     required this.timestampInscripcion,
     required this.reemp,
     required this.cantOcupantes,
+    required this.id,
   });
 
-  factory ParticipanteModel.fromMap(Map<String, dynamic> data) {
+  factory ParticipanteModel.fromMap(
+    Map<String, dynamic> data, {
+    required String id,
+  }) {
     return ParticipanteModel(
       dni: data['dni'] ?? '',
       nombre: data['nombre'] ?? '',
@@ -115,6 +120,7 @@ class ParticipanteModel {
           : null,
       reemp: data['reemp'] ?? '',
       cantOcupantes: data['cant_ocupantes'] ?? '',
+      id: id,
     );
   }
 
@@ -155,6 +161,7 @@ class ParticipanteModel {
       'timestampInscripcion': timestampInscripcion,
       'reemp': reemp,
       'cant_ocupantes': cantOcupantes,
+      'id_participante': id,
     };
   }
 

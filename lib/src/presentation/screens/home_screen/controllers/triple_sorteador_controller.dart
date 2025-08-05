@@ -5,10 +5,12 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../../../domain/models/model.dart';
 
 class TripleSorteadorController extends GetxController {
-  final RxList<String> participantes = <String>[].obs;
+  //final RxList<String> participantes = <String>[].obs;
   final RxList<String> manzanasUnicas = <String>[].obs;
   final RxMap<String, List<ManzanaModel>> lotesPorManzana =
       <String, List<ManzanaModel>>{}.obs;
+  final RxList<ParticipanteModel> participantes = <ParticipanteModel>[].obs;
+  final RxList<ManzanaModel> lotesDisponibles = <ManzanaModel>[].obs;
 
   final RxList<String> manzanaYPosicionesDisponibles = <String>[].obs; // NUEVO
 
@@ -31,8 +33,7 @@ class TripleSorteadorController extends GetxController {
           .get();
 
       final participantesList = participantesSnapshot.docs
-          .map((doc) => doc['nombre'] ?? 'Sin nombre')
-          .cast<String>()
+          .map((doc) => ParticipanteModel.fromMap(doc.data(), id: doc.id))
           .toList();
 
       participantes.assignAll(participantesList);
@@ -109,57 +110,38 @@ class TripleSorteadorController extends GetxController {
   }
 
   Future<void> registrarGanador({
-    required String nombreParticipante,
+    required ParticipanteModel participanteSeleccionado,
     required String manzanaSeleccionada,
     required ManzanaModel loteSeleccionado,
   }) async {
     try {
       final firestore = FirebaseFirestore.instance;
 
-      // Buscar participante completo por nombre
-      final participanteSnapshot = await firestore
-          .collection('participantes')
-          .where('nombre', isEqualTo: nombreParticipante)
-          .where('haSidoSorteado', isEqualTo: false)
-          .limit(1)
-          .get();
-
-      if (participanteSnapshot.docs.isEmpty) {
-        print('No se encontró al participante: $nombreParticipante');
-        return;
-      }
-
-      final participanteDoc = participanteSnapshot.docs.first;
-      final participanteData = participanteDoc.data();
-
-      // Actualizar haSidoSorteado = true
+      // Marcar participante como sorteado
       await firestore
           .collection('participantes')
-          .doc(participanteDoc.id)
+          .doc(participanteSeleccionado.id)
           .update({'haSidoSorteado': true});
 
-      // Actualizar disponible = true en lote (manzana)
+      // Marcar lote como asignado
       await firestore.collection('manzanas').doc(loteSeleccionado.id).update({
         'disponible': true,
       });
 
-      // Remover de las listas
-      participantes.remove(nombreParticipante);
-
-      // Remover lote de la manzana
-      lotesPorManzana[manzanaSeleccionada]?.removeWhere(
-        (lote) => lote.id == loteSeleccionado.id,
+      // Remover de la lista observable
+      participantes.removeWhere((p) => p.id == participanteSeleccionado.id);
+      lotesPorManzana[loteSeleccionado.manzana]?.removeWhere(
+        (l) => l.id == loteSeleccionado.id,
       );
 
-      // Si ya no quedan lotes en esa manzana, quitamos la manzana también
-      if (lotesPorManzana[manzanaSeleccionada]?.isEmpty ?? true) {
-        lotesPorManzana.remove(manzanaSeleccionada);
-        manzanasUnicas.remove(manzanaSeleccionada);
+      if (lotesPorManzana[loteSeleccionado.manzana]?.isEmpty ?? true) {
+        lotesPorManzana.remove(loteSeleccionado.manzana);
+        manzanasUnicas.remove(loteSeleccionado.manzana);
       }
 
       // Crear documento en colección "ganadores"
       final ganadorData = {
-        ...participanteData,
+        ...participanteSeleccionado.toMap(),
         'manzana': loteSeleccionado.manzana,
         'posicion': loteSeleccionado.posicion,
         'timestampGanador': DateTime.now(),

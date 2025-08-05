@@ -2,6 +2,8 @@
 
 // ignore_for_file: depend_on_referenced_packages, unnecessary_null_comparison
 
+// ignore_for_file: depend_on_referenced_packages
+
 import 'dart:io';
 import 'package:excel/excel.dart' as excel;
 import 'package:file_picker/file_picker.dart';
@@ -110,16 +112,23 @@ class ParticipantesImportController extends GetxController {
             continue;
           }
 
-          await FirebaseFirestore.instance
+          // 🔁 NUEVO: crear el documento y obtener su ID
+          final docRef = await FirebaseFirestore.instance
               .collection('participantes')
               .add(data);
 
-          nuevos.add(data);
+          // 🔁 NUEVO: actualizar el campo id_participante
+          await docRef.update({'id_participante': docRef.id});
+
+          // 🔁 NUEVO: agregar el id al mapa antes de almacenarlo localmente
+          final dataConId = Map<String, dynamic>.from(data);
+          dataConId['id_participante'] = docRef.id;
+
+          nuevos.add(dataConId);
         }
 
         participantes.assignAll(nuevos);
         mensaje.value =
-            // ignore: prefer_interpolation_to_compose_strings
             'Importación exitosa: ${nuevos.length} participantes.' +
             (duplicados > 0 ? ' ($duplicados duplicados omitidos)' : '');
 
