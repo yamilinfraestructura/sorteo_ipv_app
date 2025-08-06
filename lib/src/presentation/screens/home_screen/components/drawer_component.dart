@@ -12,11 +12,8 @@ class DrawerComponent extends StatelessWidget {
         padding: EdgeInsets.zero,
         children: [
           DrawerHeader(
-            decoration: BoxDecoration(color: Colors.blue),
-            child: const Text(
-              'Sorteador IPV',
-              style: TextStyle(color: Colors.white, fontSize: 24),
-            ),
+            decoration: BoxDecoration(color: Colors.amberAccent),
+            child: const Text('Sorteador IPV', style: TextStyle(fontSize: 24)),
           ),
           ListTile(
             leading: const Icon(Icons.import_export),
@@ -28,7 +25,7 @@ class DrawerComponent extends StatelessWidget {
           ),
           ListTile(
             leading: const Icon(Icons.import_export),
-            title: const Text('Cargar Participantes'),
+            title: const Text('Cargar Manzanas y Posiciones'),
             onTap: () {
               // Acción al pulsar el elemento
               Get.toNamed('/cargar-manzanas');
@@ -36,7 +33,7 @@ class DrawerComponent extends StatelessWidget {
           ),
           ListTile(
             leading: const Icon(Icons.settings),
-            title: const Text('Cargar Posiciones'),
+            title: const Text('Configuración'),
             onTap: () {
               // Acción al pulsar el elemento
             },

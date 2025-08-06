@@ -11,7 +11,12 @@ class CargarManzanasScreen extends StatelessWidget {
         title: const Text('Cargar Manzanas y Posiciones'),
         backgroundColor: Colors.pink,
       ),
-      body: Center(child: ImportarManzanasWidget()),
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [ImportarManzanasWidget()],
+        ),
+      ),
     );
   }
 }

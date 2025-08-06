@@ -11,7 +11,12 @@ class ImportarParticipantesScreen extends StatelessWidget {
         title: const Text('Importar Participantes'),
         backgroundColor: Colors.pink,
       ),
-      body: Center(child: ImportarParticipantesWidget()),
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [ImportarParticipantesWidget()],
+        ),
+      ),
     );
   }
 }

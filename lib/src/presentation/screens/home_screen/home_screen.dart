@@ -1,8 +1,8 @@
-// ignore_for_file: no_leading_underscores_for_local_identifiers
-
 import 'package:flutter/material.dart';
-import 'package:sorteo_ipv_app/src/presentation/screens/home_screen/widgets/widget.dart';
-import 'components/component.dart';
+// Asegúrate de que estas rutas sean correctas en tu proyecto
+import 'package:sorteo_ipv_app/src/presentation/screens/home_screen/widgets/ganadores_widget.dart'; // El nuevo widget de ganadores
+import 'package:sorteo_ipv_app/src/presentation/screens/home_screen/components/component.dart';
+import 'package:sorteo_ipv_app/src/presentation/screens/home_screen/widgets/nuevo_sorteador_widget.dart'; // Tu componente de Drawer
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -12,9 +12,13 @@ class HomeScreen extends StatelessWidget {
     final _heightScreen = MediaQuery.of(context).size.height;
     final _widthScreen = MediaQuery.of(context).size.width;
 
+    // Determina si la pantalla es lo suficientemente ancha para mostrar los widgets lado a lado
+    bool isWideScreen =
+        _widthScreen > 600; // Puedes ajustar este valor según tus necesidades
+
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Sorteador Triple'),
+        title: const Text('Sorteador de posiciones lotes - IPV 2025'),
         backgroundColor: Colors.amberAccent,
         elevation: 4,
       ),
@@ -28,7 +32,27 @@ class HomeScreen extends StatelessWidget {
             end: Alignment.bottomRight,
           ),
         ),
-        child: Center(child: TripleSlotMachineWidget()),
+        child: isWideScreen
+            ? Row(
+                // Para pantallas anchas, muestra los widgets lado a lado
+                children: [
+                  Expanded(
+                    flex: 1, // Puedes ajustar la proporción si lo necesitas
+                    child: SorteoWidget(),
+                  ),
+                  Expanded(
+                    flex: 1, // Puedes ajustar la proporción si lo necesitas
+                    child: GanadoresWidget(),
+                  ),
+                ],
+              )
+            : Column(
+                // Para pantallas pequeñas, muestra los widgets uno encima del otro
+                children: [
+                  Expanded(flex: 1, child: SorteoWidget()),
+                  Expanded(flex: 1, child: GanadoresWidget()),
+                ],
+              ),
       ),
       endDrawer: DrawerComponent(),
     );

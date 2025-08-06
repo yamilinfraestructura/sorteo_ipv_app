@@ -51,6 +51,27 @@ class SorteadorController extends GetxController {
     _initialScrollOffset = randomStart * itemHeight;
   }
 
+  // Nuevo método para actualizar items dinámicamente
+  void actualizarItems(List<String> nuevosItems) {
+    // Validar que no haya elementos duplicados
+    final itemsUnicos = nuevosItems.toSet().toList();
+
+    if (itemsUnicos.length != nuevosItems.length) {
+      print(
+        'Advertencia: Se encontraron elementos duplicados en la lista. Se han removido.',
+      );
+    }
+
+    items = itemsUnicos;
+    selectedIndex.value = null;
+    _setRandomInitialOffset();
+
+    // Si el scroll controller ya tiene clients, actualizar la posición
+    if (scrollController.hasClients) {
+      scrollController.jumpTo(_initialScrollOffset);
+    }
+  }
+
   Future<void> startAutomaticDraw() async {
     if (isScrolling.value || !scrollController.hasClients) return;
 
