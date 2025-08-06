@@ -107,7 +107,7 @@ class SorteoWidget extends StatelessWidget {
                   textAlign: TextAlign.center,
                 ),
                 Text(
-                  'Manzana Asignada: ${controller.manzanaGanadora.value!.manzana} - Lote: ${controller.manzanaGanadora.value!.posicion}', // "Posición" cambiado a "Lote"
+                  'Manzana: ${controller.manzanaGanadora.value!.manzana} - Lote: ${controller.manzanaGanadora.value!.posicion}', // "Posición" cambiado a "Lote"
                   style: const TextStyle(
                     fontSize: 22,
                     color: Colors.green,
