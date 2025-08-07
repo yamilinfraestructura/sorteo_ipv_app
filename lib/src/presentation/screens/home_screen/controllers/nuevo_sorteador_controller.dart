@@ -162,8 +162,9 @@ class SorteoController extends GetxController {
         'participanteId': ganador.id,
         'manzanaId': manzana.id,
         'nombreCompleto': ganador.nombreCompleto,
-        'manzanaNombre': manzana.manzana, // Guardar el nombre de la manzana
-        'loteNombre': manzana.posicion, // Guardar el nombre del lote (posición)
+        'dni_ganador': ganador.dni, // ¡Guardamos el DNI del ganador!
+        'manzanaNombre': manzana.manzana,
+        'loteNombre': manzana.posicion,
         'fechaSorteo': FieldValue.serverTimestamp(),
       });
 

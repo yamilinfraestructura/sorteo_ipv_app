@@ -7,6 +7,7 @@ class GanadorModel {
   final String nombreCompleto;
   final String manzanaNombre; // Nuevo campo
   final String loteNombre; // Nuevo campo
+  final String dniGanador;
   final DateTime? fechaSorteo;
 
   GanadorModel({
@@ -16,6 +17,7 @@ class GanadorModel {
     required this.nombreCompleto,
     required this.manzanaNombre, // Nuevo campo
     required this.loteNombre, // Nuevo campo
+    required this.dniGanador,
     this.fechaSorteo,
   });
 
@@ -27,6 +29,7 @@ class GanadorModel {
       nombreCompleto: data['nombreCompleto'] ?? '',
       manzanaNombre: data['manzanaNombre'] ?? '', // Mapeo del nuevo campo
       loteNombre: data['loteNombre'] ?? '', // Mapeo del nuevo campo
+      dniGanador: data['dni_ganador'] ?? '',
       fechaSorteo: data['fechaSorteo'] != null
           ? (data['fechaSorteo'] as Timestamp).toDate()
           : null,
