@@ -26,7 +26,7 @@ class SorteoWidget extends StatelessWidget {
                 ),
                 Text(
                   'Participantes: ${controller.participantesDisponibles.length} | Manzanas: ${controller.manzanasDisponibles.length}',
-                  style: const TextStyle(fontSize: 18),
+                  style: const TextStyle(fontSize: 20),
                 ),
               ],
             ),
@@ -58,7 +58,7 @@ class SorteoWidget extends StatelessWidget {
                     fontSize: 24,
                     fontStyle: FontStyle.italic,
                     fontWeight: FontWeight.bold,
-                  ), // Tamaño de fuente mejorado
+                  ),
                   textAlign: TextAlign.center,
                 ),
                 Text(
@@ -67,62 +67,17 @@ class SorteoWidget extends StatelessWidget {
                     fontSize: 24,
                     fontStyle: FontStyle.italic,
                     fontWeight: FontWeight.bold,
-                  ), // Tamaño de fuente mejorado
+                  ),
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 40),
-                const CircularProgressIndicator(), // Indicador visual de que algo está pasando
+                const CircularProgressIndicator(),
               ],
             );
           }
 
-          // Si hay un ganador, muestra los resultados
-          if (controller.participanteGanador.value != null &&
-              controller.manzanaGanadora.value != null) {
-            // Programar el reseteo automático después de un breve retraso
-            // Esto permite al usuario ver el resultado antes de que la pantalla se prepare para el siguiente sorteo
-            Future.delayed(const Duration(seconds: 3), () {
-              // Puedes ajustar este tiempo
-              if (controller.participanteGanador.value != null) {
-                // Solo resetear si aún hay un ganador mostrado
-                controller.resetearSorteo();
-              }
-            });
-
-            return Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const Text(
-                  '¡Ganador Sorteado!',
-                  style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-                ),
-                const SizedBox(height: 20),
-                Text(
-                  'Participante: ${controller.participanteGanador.value!.nombreCompleto}',
-                  style: const TextStyle(
-                    fontSize: 22,
-                    color: Colors.green,
-                    fontWeight: FontWeight.bold,
-                  ), // Tamaño de fuente mejorado
-                  textAlign: TextAlign.center,
-                ),
-                Text(
-                  'Manzana: ${controller.manzanaGanadora.value!.manzana} - Lote: ${controller.manzanaGanadora.value!.posicion}', // "Posición" cambiado a "Lote"
-                  style: const TextStyle(
-                    fontSize: 22,
-                    color: Colors.green,
-                    fontWeight: FontWeight.bold,
-                  ), // Tamaño de fuente mejorado
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 40),
-                // Eliminamos el botón "Realizar Otro Sorteo"
-                // El reseteo ahora es automático
-              ],
-            );
-          }
-
-          // Interfaz principal para realizar el sorteo
+          // Interfaz principal para realizar el sorteo y mostrar el último ganador
+          // Ya no se usa la lógica del reseteo automático con Future.delayed
           return Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
@@ -130,7 +85,7 @@ class SorteoWidget extends StatelessWidget {
                 'Listos para sortear',
                 style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
               ),
-              const SizedBox(height: 40), // Espacio ajustado
+              const SizedBox(height: 40),
               ElevatedButton(
                 onPressed: controller.realizarSorteo,
                 style: ElevatedButton.styleFrom(
@@ -144,6 +99,68 @@ class SorteoWidget extends StatelessWidget {
                   style: TextStyle(fontSize: 18),
                 ),
               ),
+              const SizedBox(height: 20),
+              // Aquí mostramos el último ganador solo si existe
+              if (controller.participanteGanador.value != null &&
+                  controller.manzanaGanadora.value != null)
+                Container(
+                  width: double.infinity,
+                  margin: const EdgeInsets.symmetric(horizontal: 20),
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: Colors.green.shade400,
+                    borderRadius: const BorderRadius.all(Radius.circular(12)),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.grey.withOpacity(0.5),
+                        spreadRadius: 2,
+                        blurRadius: 5,
+                        offset: const Offset(0, 3),
+                      ),
+                    ],
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'ÚLTIMO POSICIONADO',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        '${controller.participanteGanador.value!.nombreCompleto}',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 27,
+                          fontWeight: FontWeight.bold,
+                        ),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      Text(
+                        'DNI: ${controller.participanteGanador.value!.dni}',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 25,
+                          fontWeight: FontWeight.w500,
+                        ),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      Text(
+                        'MANZANA: ${controller.manzanaGanadora.value!.manzana} - LOTE: ${controller.manzanaGanadora.value!.posicion}',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 27,
+                          fontWeight: FontWeight.w500,
+                        ),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
+                  ),
+                ),
             ],
           );
         }),

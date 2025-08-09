@@ -16,7 +16,7 @@ class GanadoresWidget extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Historial de Ganadores'),
+        title: const Text('Historial de Posicionados'),
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh),
@@ -33,7 +33,7 @@ class GanadoresWidget extends StatelessWidget {
         if (controller.ganadores.isEmpty) {
           return const Center(
             child: Text(
-              'Aún no hay ganadores sorteados.',
+              'Aún no hay participantes sorteados.',
               style: TextStyle(fontSize: 16),
             ),
           );
@@ -43,18 +43,104 @@ class GanadoresWidget extends StatelessWidget {
           itemCount: controller.ganadores.length,
           itemBuilder: (context, index) {
             final ganador = controller.ganadores[index];
+            final isLastPositioned =
+                index ==
+                0; // El último posicionado está en el índice 0 (orden descendente)
+
             return Card(
               margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              child: ListTile(
-                title: Text(
-                  ganador.nombreCompleto,
-                  style: const TextStyle(fontWeight: FontWeight.bold),
+              elevation: isLastPositioned ? 8 : 2,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+                side: isLastPositioned
+                    ? BorderSide(color: Colors.green.shade400, width: 3)
+                    : BorderSide.none,
+              ),
+              child: Container(
+                decoration: isLastPositioned
+                    ? BoxDecoration(
+                        borderRadius: BorderRadius.circular(12),
+                        gradient: LinearGradient(
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                          colors: [Colors.green.shade50, Colors.green.shade100],
+                        ),
+                      )
+                    : null,
+                child: ListTile(
+                  leading: isLastPositioned
+                      ? Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: Colors.green.shade400,
+                            shape: BoxShape.circle,
+                          ),
+                          child: const Icon(
+                            Icons.star,
+                            color: Colors.white,
+                            size: 20,
+                          ),
+                        )
+                      : null,
+                  title: Text(
+                    ganador.nombreCompleto,
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: isLastPositioned
+                          ? Colors.green.shade800
+                          : Colors.black87,
+                      fontSize: isLastPositioned ? 18 : 16,
+                    ),
+                  ),
+                  subtitle: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Mz: ${ganador.manzanaNombre} | Lote: ${ganador.loteNombre}',
+                        style: TextStyle(
+                          color: isLastPositioned
+                              ? Colors.green.shade700
+                              : Colors.black54,
+                          fontWeight: isLastPositioned
+                              ? FontWeight.w600
+                              : FontWeight.normal,
+                        ),
+                      ),
+                      Text(
+                        'Fecha Sorteo: ${ganador.fechaSorteo != null ? DateFormat('dd/MM/yyyy HH:mm').format(ganador.fechaSorteo!) : 'N/A'}',
+                        style: TextStyle(
+                          color: isLastPositioned
+                              ? Colors.green.shade600
+                              : Colors.black54,
+                          fontSize: isLastPositioned ? 14 : 12,
+                        ),
+                      ),
+                      if (isLastPositioned) ...[
+                        const SizedBox(height: 4),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 4,
+                          ),
+                          decoration: BoxDecoration(
+                            color: Colors.green.shade400,
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: const Text(
+                            'ÚLTIMO POSICIONADO',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                  onTap: () =>
+                      _mostrarDetallesGanador(context, controller, ganador),
                 ),
-                subtitle: Text(
-                  'Mz: ${ganador.manzanaNombre} | Lote: ${ganador.loteNombre}\nFecha Sorteo: ${ganador.fechaSorteo != null ? DateFormat('dd/MM/yyyy HH:mm').format(ganador.fechaSorteo!) : 'N/A'}',
-                ),
-                onTap: () =>
-                    _mostrarDetallesGanador(context, controller, ganador),
               ),
             );
           },
@@ -83,7 +169,7 @@ class GanadoresWidget extends StatelessWidget {
 
       // Muestra los detalles en un diálogo
       Get.defaultDialog(
-        title: 'Detalles del Ganador',
+        title: 'Detalles del Posicionado',
         content: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -108,7 +194,7 @@ class GanadoresWidget extends StatelessWidget {
     } catch (e) {
       Get.back(); // Cierra el indicador de carga
       Get.snackbar('Error', 'No se pudieron obtener los detalles completos.');
-      print('Error al mostrar detalles del ganador: $e');
+      print('Error al mostrar detalles del posicionado: $e');
     }
   }
 }
